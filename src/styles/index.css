@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sultan-bg: #0a0a0c;
+  --color-sultan-surface: #111114;
+  --color-sultan-surface-2: #18181c;
+  --color-sultan-surface-3: #1f1f25;
+  --color-sultan-border: #2a2a32;
+  --color-sultan-border-light: #3a3a44;
+  --color-sultan-text: #e8e8ec;
+  --color-sultan-text-muted: #8888a0;
+  --color-sultan-text-dim: #555568;
+  --color-sultan-accent: #c89b3c;
+  --color-sultan-accent-dim: #a07820;
+  --color-sultan-accent-glow: #c89b3c40;
+  --color-sultan-red: #e24a4a;
+  --color-sultan-green: #3ae26a;
+  --color-sultan-blue: #4a8ae2;
+  --color-sultan-meter-low: #3ae26a;
+  --color-sultan-meter-mid: #e2c83a;
+  --color-sultan-meter-high: #e24a4a;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-sultan-bg);
+  color: var(--color-sultan-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--color-sultan-accent);
+  color: var(--color-sultan-bg);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-sultan-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-sultan-border-light);
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes subtle-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+
+.glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+.subtle-float {
+  animation: subtle-float 6s ease-in-out infinite;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px var(--color-sultan-surface-2) inset !important;
+  -webkit-text-fill-color: var(--color-sultan-text) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
