@@ -2,7 +2,7 @@
 
 Frontend prototype of a guitar signal-chain application. The interface is a single full-window stage: sign in, arrange effect devices, and adjust their controls. There is no audio engine in this repository.
 
-Licensed under [GPL-3.0-or-later](LICENSE).
+Licensed under [GPL-3.0-or-later](LICENSE). [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 Repository: https://github.com/palaarda/sultandsp-vx
 
