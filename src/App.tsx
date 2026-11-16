@@ -1,8 +1,14 @@
+import { lazy, Suspense } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/stores/authStore'
-import { LoginPage } from '@/components/auth/LoginPage'
-import { Dashboard } from '@/components/layout/Dashboard'
 import { AnimatePresence, motion } from 'framer-motion'
+
+const LoginPage = lazy(() =>
+  import('@/components/auth/LoginPage').then((module) => ({ default: module.LoginPage })),
+)
+const Dashboard = lazy(() =>
+  import('@/components/layout/Dashboard').then((module) => ({ default: module.Dashboard })),
+)
 
 export function App() {
   useAuth()
@@ -14,31 +20,33 @@ export function App() {
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-sultan-bg">
-      <AnimatePresence mode="wait">
-        {user ? (
-          <motion.div
-            key="dashboard"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="w-full h-full"
-          >
-            <Dashboard />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="login"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="w-full h-full"
-          >
-            <LoginPage />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Suspense fallback={<LoadingScreen />}>
+        <AnimatePresence mode="wait">
+          {user ? (
+            <motion.div
+              key="dashboard"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="w-full h-full"
+            >
+              <Dashboard />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="login"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="w-full h-full"
+            >
+              <LoginPage />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Suspense>
     </div>
   )
 }

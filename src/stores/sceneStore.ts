@@ -16,7 +16,7 @@ interface SceneState {
 }
 
 export const useSceneStore = create<SceneState>((set) => ({
-  nodes: [],
+  nodes: sceneService.currentScene(),
   selectedNodeId: null,
 
   loadScene: async () => {

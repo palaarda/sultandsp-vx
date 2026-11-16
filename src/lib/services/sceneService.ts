@@ -1,15 +1,124 @@
 import type { FxDevice, SceneNode, ISceneService } from '../types'
+import { fxLibraryData } from '../data/fxLibrary'
+
+const STORAGE_KEY = 'sultandsp-vx-scene'
+
+interface PersistedSceneNode {
+  instanceId: string
+  deviceId: string
+  params: Record<string, number>
+  enabled: boolean
+  position: number
+}
 
 let counter = 0
 function generateInstanceId(): string {
   return `node_${Date.now()}_${++counter}`
 }
 
+function findDevice(deviceId: string): FxDevice | undefined {
+  for (const category of fxLibraryData) {
+    for (const subcategory of category.subcategories) {
+      const device = subcategory.devices.find((item) => item.id === deviceId)
+      if (device) return device
+    }
+  }
+  return undefined
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isPersistedNode(value: unknown): value is PersistedSceneNode {
+  if (!isRecord(value)) return false
+  if (typeof value.instanceId !== 'string' || value.instanceId.trim() === '') return false
+  if (typeof value.deviceId !== 'string' || value.deviceId.trim() === '') return false
+  if (typeof value.enabled !== 'boolean') return false
+  if (typeof value.position !== 'number' || !Number.isFinite(value.position)) return false
+  if (!isRecord(value.params)) return false
+
+  for (const paramValue of Object.values(value.params)) {
+    if (typeof paramValue !== 'number' || !Number.isFinite(paramValue)) return false
+  }
+
+  return true
+}
+
+function sanitizeParams(device: FxDevice, raw: Record<string, number>): Record<string, number> {
+  const params: Record<string, number> = {}
+  for (const param of device.params) {
+    const value = raw[param.id]
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      params[param.id] = Math.min(param.max, Math.max(param.min, value))
+    } else {
+      params[param.id] = param.default
+    }
+  }
+  return params
+}
+
+function parseStoredScene(raw: string): SceneNode[] {
+  const parsed: unknown = JSON.parse(raw)
+  if (!Array.isArray(parsed)) return []
+
+  const seen = new Set<string>()
+  const draft: Array<{ saved: PersistedSceneNode; device: FxDevice }> = []
+
+  for (const item of parsed) {
+    if (!isPersistedNode(item)) return []
+    if (seen.has(item.instanceId)) return []
+    seen.add(item.instanceId)
+
+    const device = findDevice(item.deviceId)
+    if (!device) return []
+
+    draft.push({ saved: item, device })
+  }
+
+  draft.sort((a, b) => a.saved.position - b.saved.position)
+
+  return draft.map(({ saved, device }, index) => ({
+    instanceId: saved.instanceId,
+    deviceId: device.id,
+    device,
+    params: sanitizeParams(device, saved.params),
+    enabled: saved.enabled,
+    position: index,
+  }))
+}
+
+function loadStoredScene(): SceneNode[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (!stored) return []
+    return parseStoredScene(stored)
+  } catch {
+    return []
+  }
+}
+
 class LocalSceneService implements ISceneService {
-  private scene: SceneNode[] = []
+  private scene: SceneNode[] = loadStoredScene()
   private listeners: Set<() => void> = new Set()
 
+  private persist() {
+    try {
+      const payload: PersistedSceneNode[] = this.scene.map((node) => ({
+        instanceId: node.instanceId,
+        deviceId: node.deviceId,
+        params: node.params,
+        enabled: node.enabled,
+        position: node.position,
+      }))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+    } catch {
+      // Storage can be unavailable (private mode, quota). Keep the in-memory scene.
+    }
+  }
+
   private notify() {
+    this.persist()
     this.listeners.forEach((fn) => fn())
   }
 
@@ -18,8 +127,12 @@ class LocalSceneService implements ISceneService {
     return () => { this.listeners.delete(fn) }
   }
 
-  async getScene(): Promise<SceneNode[]> {
+  currentScene(): SceneNode[] {
     return [...this.scene]
+  }
+
+  async getScene(): Promise<SceneNode[]> {
+    return this.currentScene()
   }
 
   async addToScene(device: FxDevice, position?: number): Promise<SceneNode> {
@@ -80,16 +193,20 @@ class LocalSceneService implements ISceneService {
   }
 
   async moveNode(instanceId: string, direction: 'left' | 'right'): Promise<void> {
-    const idx = this.scene.findIndex((n) => n.instanceId === instanceId)
-    if (idx < 0) return
-    const target = direction === 'left' ? idx - 1 : idx + 1
+    const index = this.scene.findIndex((n) => n.instanceId === instanceId)
+    if (index < 0) return
+
+    const target = direction === 'left' ? index - 1 : index + 1
     if (target < 0 || target >= this.scene.length) return
 
-    const temp = this.scene[idx]
-    this.scene[idx] = this.scene[target]
-    this.scene[target] = temp
-    this.reindex()
-    this.notify()
+    const instanceIds = this.scene.map((n) => n.instanceId)
+    const current = instanceIds[index]
+    const swapped = instanceIds[target]
+    if (current === undefined || swapped === undefined) return
+
+    instanceIds[index] = swapped
+    instanceIds[target] = current
+    await this.reorderScene(instanceIds)
   }
 
   private reindex() {
