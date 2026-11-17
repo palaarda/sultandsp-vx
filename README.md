@@ -44,14 +44,37 @@ Firebase Firestore is not initialized. No screen reads or writes Cloud Firestore
 
 ## Screenshots
 
-This repository does not include interface screenshots.
+### Virtual Stage
 
-The running app has four main views:
+The signal chain sits on an infinite canvas. The dotted field has no fixed page edge: drag to pan in any direction, and use the controls at the bottom right to zoom. Input is on the left, output is on the right, and the devices run between them.
 
-- Sign-in / registration form
-- Virtual Stage: input, device chain, output, on a pannable canvas
-- Components: category list and device cards
-- Presets, Market (Coming Soon), Settings, and Profile, opened from the top bar
+<p align="center">
+  <img src="screenshots/virtualstage.png" alt="Virtual Stage on an infinite pan-and-zoom canvas. A dotted field holds Input, a pedal, an amp, a second pedal, an amp head, and Output." width="100%">
+</p>
+
+### Sign in
+
+Email and password sign-in. The same card switches to registration.
+
+<p align="center">
+  <img src="screenshots/login.png" alt="Sign-in screen with email and password fields" width="100%">
+</p>
+
+### Components
+
+The device catalog. Pedals and amps can be filtered, searched, and added to the chain.
+
+<p align="center">
+  <img src="screenshots/components.png" alt="Components library with pedal and amp cards" width="100%">
+</p>
+
+### Presets
+
+The preset list, with search, category filters, and drag-and-drop order. The rows in this screenshot are the built-in example presets, not a saved scene.
+
+<p align="center">
+  <img src="screenshots/presets.png" alt="Preset list with search, category filters, and example tones" width="100%">
+</p>
 
 ## Getting Started
 
@@ -178,7 +201,6 @@ Local storage keys:
 - Implement NAM import, or remove the card until a parser exists.
 - Add cabinet models, or hide the empty category.
 - Remove `react-router-dom` until the app has URL routes.
-- Add interface screenshots to this document.
 
 ## License
 
